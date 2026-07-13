@@ -63,12 +63,27 @@ const problemSchema = new Schema({
         }
     ],
 
+    referenceSolution:[
+        {
+            language:{
+                type:String,
+                required:true,
+            },
+            completeCode:{
+                type:String,
+                required:true
+            }
+        }
+    ],
+
     problemCreator:{
         type: Schema.Types.ObjectId,
         ref:'user',
         required:true
     }
-})
+}, {
+    timestamps: true
+});
 
 // Add indexes for frequent queries
 problemSchema.index({ difficulty: 1 });

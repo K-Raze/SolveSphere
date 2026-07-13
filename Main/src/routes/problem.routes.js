@@ -5,18 +5,17 @@ const {
     problemUpdate,
     problemDelete,
     problemFetch,
-    getAllProblem,
-    solvedProblem
+    getAllProblem
 } = require('../controllers/problem.controller');
+const authMiddleware = require('../middleware/auth.middleware');
 
-// Create, Update, Delete
-problemRouter.post("/create", problemCreate);
-problemRouter.patch("/:id", problemUpdate);
-problemRouter.delete("/:id", problemDelete);
+// Admin-only routes (create, update, delete problems)
+problemRouter.post("/create", authMiddleware(['admin']), problemCreate);
+problemRouter.patch("/:id", authMiddleware(['admin']), problemUpdate);
+problemRouter.delete("/:id", authMiddleware(['admin']), problemDelete);
 
-// Fetch
-problemRouter.get("/user", solvedProblem);
-problemRouter.get("/:id", problemFetch);
-problemRouter.get("/", getAllProblem);
+// Authenticated user routes (view problems)
+problemRouter.get("/:id", authMiddleware(), problemFetch);
+problemRouter.get("/", authMiddleware(), getAllProblem);
 
 module.exports = problemRouter;
