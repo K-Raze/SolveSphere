@@ -13,6 +13,15 @@ const userSchema = new Schema({
         minLength:3,
         maxLength:20,
     },
+    username: {
+        type: String,
+        unique: true,
+        sparse: true, // allows multiple null values (not everyone sets a username)
+        trim: true,
+        lowercase: true,
+        minLength: 3,
+        maxLength: 20
+    },
     emailId:{
         type:String,
         required:true,
@@ -26,13 +35,27 @@ const userSchema = new Schema({
         min:6,
         max:80,
     },
+    bio: {
+        type: String,
+        maxLength: 200,
+        default: ''
+    },
     role:{
         type:String,
         enum:['user','admin'],
         default: 'user'
     },
-    problemSolved:{
-        type:[String]
+    problemSolved: [{
+        type: Schema.Types.ObjectId,
+        ref: 'problem'
+    }],
+    bookmarks: [{
+        type: Schema.Types.ObjectId,
+        ref: 'problem'
+    }],
+    reputation: {
+        type: Number,
+        default: 0
     },
     password:{
         type:String,
@@ -41,6 +64,15 @@ const userSchema = new Schema({
     }
 },{
     timestamps:true
+});
+
+// Cascade delete: when a user profile is deleted, delete all their submissions
+userSchema.post('findOneAndDelete', async function (doc) {
+    if (doc) {
+        // Need to require Submission here to avoid circular dependency issues
+        const Submission = require('./submission');
+        await Submission.deleteMany({ userId: doc._id });
+    }
 });
 
 // Compare user's password with the hashed password in database

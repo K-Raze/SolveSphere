@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 const register = async (req, res, next) => {
     try {
         validate(req.body); 
-        const { firstName, lastName, emailId, password, age } = req.body;
+        const { firstName, lastName, emailId, password, age, username } = req.body;
 
         const hashedPassword = await bcrypt.hash(password, 10);
         
@@ -15,6 +15,7 @@ const register = async (req, res, next) => {
             firstName,
             lastName,
             emailId,
+            username,
             password: hashedPassword,
             age,
             role: 'user'
@@ -88,22 +89,20 @@ const logout = async (req, res, next) => {
 const adminRegister = async (req, res, next) => {
     try {
         validate(req.body); 
-        const { firstName, lastName, emailId, password, age } = req.body;
+        const { firstName, lastName, emailId, password, age, username } = req.body;
 
         const hashedPassword = await bcrypt.hash(password, 10);
         
-        const user = await User.create({
+        const adminUser = await User.create({
             firstName,
             lastName,
             emailId,
+            username,
             password: hashedPassword,
             age,
             role: 'admin'
         });
 
-        const token = user.getJwtToken();
-        res.cookie('token', token, { maxAge: 60 * 60 * 1000, httpOnly: true });
-        
         res.status(201).json({
             success: true,
             message: "Admin Registered Successfully"
@@ -113,4 +112,78 @@ const adminRegister = async (req, res, next) => {
     }
 };
 
-module.exports = { register, login, logout, adminRegister };
+const deleteProfile = async (req, res, next) => {
+    try {
+        const userId = req.user._id;
+        
+        // This findByIdAndDelete triggers the findOneAndDelete middleware we added in user.js
+        const deletedUser = await User.findByIdAndDelete(userId);
+        
+        if (!deletedUser) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        // Clear their cookie as they are no longer a user
+        res.cookie("token", null, { expires: new Date(Date.now()), httpOnly: true });
+
+        res.status(200).json({
+            success: true,
+            message: "Profile and all submissions deleted successfully"
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+const getPublicProfile = async (req, res, next) => {
+    try {
+        const { username } = req.params;
+        const user = await User.findOne({ username }).select('username firstName lastName bio reputation problemSolved createdAt');
+        
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        const publicData = {
+            username: user.username,
+            name: `${user.firstName} ${user.lastName}`,
+            bio: user.bio,
+            reputation: user.reputation,
+            solvedCount: user.problemSolved.length,
+            memberSince: user.createdAt
+        };
+
+        res.status(200).json({
+            success: true,
+            data: publicData
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+const getLeaderboard = async (req, res, next) => {
+    try {
+        const topUsers = await User.find({ username: { $exists: true, $ne: null } })
+            .sort({ reputation: -1 })
+            .limit(50)
+            .select('username firstName lastName bio reputation problemSolved');
+        
+        const leaderboard = topUsers.map(u => ({
+            username: u.username,
+            name: `${u.firstName} ${u.lastName}`,
+            bio: u.bio,
+            reputation: u.reputation,
+            solvedCount: u.problemSolved.length
+        }));
+
+        res.status(200).json({
+            success: true,
+            data: leaderboard
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+module.exports = { register, login, logout, adminRegister, deleteProfile, getPublicProfile, getLeaderboard };

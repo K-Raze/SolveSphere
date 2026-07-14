@@ -4,7 +4,8 @@ const {Schema} = mongoose;
 const problemSchema = new Schema({
     title:{
         type:String,
-        required:true
+        required:true,
+        trim: true
     },
     description:{
         type:String,
@@ -16,10 +17,70 @@ const problemSchema = new Schema({
         required:true,
     },
     tags:{
-        type:String,
-        enum:['array','linkedList','graph','dp'],
-        required:true
+        type:[String],
+        default:[]
     },
+
+    // Interview metadata — what makes SolveSphere different
+    company: {
+        type: [String],
+        default: []
+    },
+    role: {
+        type: String,
+        trim: true
+    },
+    interviewRound: {
+        type: String,
+        enum: ['online-assessment', 'phone-screen', 'onsite', 'take-home', 'other'],
+    },
+    yearAsked: {
+        type: Number
+    },
+    frequency: {
+        type: Number,
+        default: 1
+    },
+    sourceType: {
+        type: String,
+        enum: ['admin', 'community', 'archive'],
+        default: 'admin'
+    },
+    sourceUrl: {
+        type: String,
+        trim: true
+    },
+    relatedProblems: [{
+        type: Schema.Types.ObjectId,
+        ref: 'problem'
+    }],
+
+    // Community workflow status
+    status: {
+        type: String,
+        enum: ['draft', 'pending', 'approved', 'rejected'],
+        default: 'approved' // admin-created problems skip the review queue
+    },
+    confidenceLevel: {
+        type: String,
+        enum: ['community-reported', 'multiple-reports', 'admin-reviewed', 'high-confidence'],
+        default: 'community-reported'
+    },
+    reports: [{
+        experienceId: {
+            type: Schema.Types.ObjectId,
+            ref: 'interviewExperience'
+        },
+        submittedBy: {
+            type: Schema.Types.ObjectId,
+            ref: 'user'
+        },
+        date: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+
     visibleTestCases:[
         {
             input:{
@@ -85,10 +146,15 @@ const problemSchema = new Schema({
     timestamps: true
 });
 
-// Add indexes for frequent queries
+// Indexes for filtering, searching, and sorting
 problemSchema.index({ difficulty: 1 });
 problemSchema.index({ tags: 1 });
+problemSchema.index({ company: 1 });
+problemSchema.index({ status: 1 });
+problemSchema.index({ frequency: -1 });
+problemSchema.index({ company: 1, difficulty: 1 });
+problemSchema.index({ title: 'text', description: 'text' });
 
-const Problem = mongoose.model('problem',problemSchema);
+const Problem = mongoose.model('problem', problemSchema);
 
 module.exports = Problem;

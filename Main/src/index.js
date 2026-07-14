@@ -7,6 +7,10 @@ const redisClient = require('./config/redis');
 
 const authRouter = require("./routes/auth.routes");
 const problemRouter = require("./routes/problem.routes");
+const submissionRouter = require("./routes/submission.routes");
+const experienceRouter = require("./routes/experience.routes");
+const aiRouter = require("./routes/ai.routes");
+const discussionRouter = require("./routes/discussion.routes");
 
 const app = express();
 
@@ -17,6 +21,10 @@ app.use(cookieParser());
 // Routes
 app.use('/user', authRouter);
 app.use('/problem', problemRouter);
+app.use('/submission', submissionRouter);
+app.use('/experience', experienceRouter);
+app.use('/ai', aiRouter);
+app.use('/discussion', discussionRouter);
 
 // Global Error Handler
 app.use((err, req, res, next) => {
