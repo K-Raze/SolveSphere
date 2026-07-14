@@ -14,6 +14,8 @@ The online judge is only the foundation. The primary goal of SolveSphere is to r
 ## ✨ Key Features
 
 - **🧠 AI-Powered Generation**: Users submit raw interview experiences. Our Gemini AI pipeline automatically extracts constraints, edge cases, and requirements to generate structured, playable coding problems.
+- **💡 Contextual AI Hints**: Get hints specifically tailored to *your* code and approach, simulating a real interviewer giving you a nudge in the right direction (only when asked!).
+- **⏱️ 45-Minute Interview Mode**: Replicates the pressure of a real technical interview with a strict 45-minute timer to solve the problem.
 - **🛡️ Confidence System**: We don't make false claims about "official" questions. Problems are rated via a transparent confidence metric (`Community Reported`, `Multiple Reports`, `Admin Reviewed`, `High Confidence`).
 - **🔍 AI Duplicate Detection**: Prevents database bloat by semantically matching new submissions against the database. If a duplicate is found, the reports are merged and the problem's confidence score increases!
 - **🏆 Gamification & Reputation**: Users earn a Reputation Score (+10 for solving a problem, +50 for contributing an approved interview experience) and compete on a Global Leaderboard.
