@@ -68,7 +68,7 @@ The crown jewel of SolveSphere is its automated data pipeline:
 1. **Clone the repository**
    ```bash
    git clone https://github.com/K-Raze/SolveSphere.git
-   cd SolveSphere/Main
+   cd SolveSphere/backend
    ```
 
 2. **Install dependencies**
@@ -77,7 +77,7 @@ The crown jewel of SolveSphere is its automated data pipeline:
    ```
 
 3. **Configure Environment Variables**
-   Create a `.env` file in the `Main` directory:
+   Create a `.env` file in the `backend` directory:
    ```env
    PORT=3000
    DB_CONNECT_STRING=mongodb://localhost:27017/solvesphere

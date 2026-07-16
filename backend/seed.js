@@ -9,7 +9,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 // NOTE: To process all 50 problems, change this to seedData.slice(0, 50).
 // We default to 2 to verify it works without exhausting Gemini rate limits immediately.
-const BATCH_TO_PROCESS = seedData.slice(0, 2);
+const BATCH_TO_PROCESS = seedData;
 
 async function runSeed() {
     console.log("🌱 Starting Initial Database Seeding Process 🌱");
