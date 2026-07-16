@@ -8,11 +8,17 @@ const {
     approveExperience,
     rejectExperience,
     solveProblemAction,
-    analyzeSubmission
+    analyzeSubmission,
+    getPublicExperiences,
+    getExperienceById
 } = require('../controllers/experience.controller');
 const authMiddleware = require('../middleware/auth.middleware');
 
-// User routes
+// Public routes (Viewing experiences)
+experienceRouter.get('/', getPublicExperiences);
+experienceRouter.get('/:id', getExperienceById);
+
+// User routes (Requires login)
 experienceRouter.post('/analyze', authMiddleware(), analyzeSubmission);
 experienceRouter.post('/submit', authMiddleware(), submitExperience);
 experienceRouter.get('/my-submissions', authMiddleware(), getMySubmissions);

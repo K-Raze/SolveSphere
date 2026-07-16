@@ -369,6 +369,46 @@ const analyzeSubmission = async (req, res, next) => {
     }
 };
 
+const getPublicExperiences = async (req, res, next) => {
+    try {
+        const experiences = await InterviewExperience.find({ status: 'approved' })
+            .populate('submittedBy', 'username')
+            .populate('similarProblemId', 'title difficulty')
+            .populate('generatedProblemId', 'title difficulty')
+            .sort({ createdAt: -1 })
+            .limit(50); // Pagination could be added here
+
+        res.status(200).json({
+            success: true,
+            count: experiences.length,
+            data: experiences
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+const getExperienceById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const experience = await InterviewExperience.findById(id)
+            .populate('submittedBy', 'username')
+            .populate('similarProblemId', 'title difficulty status')
+            .populate('generatedProblemId', 'title difficulty status');
+
+        if (!experience) {
+            return res.status(404).json({ success: false, message: "Experience not found" });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: experience
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
 module.exports = {
     submitExperience,
     getMySubmissions,
@@ -377,5 +417,7 @@ module.exports = {
     approveExperience,
     rejectExperience,
     solveProblemAction,
-    analyzeSubmission
+    analyzeSubmission,
+    getPublicExperiences,
+    getExperienceById
 };
