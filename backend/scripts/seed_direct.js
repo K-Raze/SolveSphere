@@ -2,9 +2,9 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const fs = require('fs');
 
-const User = require('./src/models/user');
-const Problem = require('./src/models/problem');
-const InterviewExperience = require('./src/models/interviewExperience');
+const User = require('../src/models/user');
+const Problem = require('../src/models/problem');
+const InterviewExperience = require('../src/models/interviewExperience');
 
 async function seedDirectly() {
     console.log("🚀 Starting Direct Database Seeding...");

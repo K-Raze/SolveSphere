@@ -2,6 +2,9 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const axios = require('axios');
 const fs = require('fs');
+const User = require('../src/models/user');
+const Problem = require('../src/models/problem');
+const InterviewExperience = require('../src/models/interviewExperience');
 
 const BASE_URL = 'http://localhost:3000';
 const seedData = JSON.parse(fs.readFileSync('seed_data.json', 'utf8'));
@@ -17,7 +20,6 @@ async function runSeed() {
 
     try {
         await mongoose.connect(process.env.DB_CONNECT_STRING);
-        const User = require('./src/models/user');
 
         // 1. Create Seeder Admin
         await User.deleteOne({ emailId: "seeder@solvesphere.com" });
