@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/K-Raze/SolveSphere/main/frontend/public/vite.svg" width="80" alt="SolveSphere Logo" />
   <h1>🌐 SolveSphere</h1>
   <p><b>Read the interview. Solve the problem.</b></p>
   <p><i>An AI-Powered Interview Preparation Platform</i></p>
@@ -7,7 +6,6 @@
 
 ---
 
-![SolveSphere Showcase](/Users/kartikdhamija/.gemini/antigravity-ide/brain/tempmediaStorage/media__1784328131730.png)
 
 ## 🌟 Vision
 
