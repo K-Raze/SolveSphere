@@ -35,6 +35,12 @@ SolveSphere is not just another LeetCode clone. Every day, thousands of engineer
 - **React.js & Vite**: Lightning-fast modern Single Page Application.
 - **Tailwind CSS / Vanilla CSS**: For a stunning, modern dark-mode glassmorphism aesthetic.
 - **Monaco Editor**: VS-Code powered rich text code editing experience in the browser.
+<img width="1440" height="807" alt="Screenshot 2026-07-18 at 4 11 54 AM" src="https://github.com/user-attachments/assets/8d51bd71-c1ef-4b39-bf37-0b515b29a12a" />
+<img width="1439" height="811" alt="Screenshot 2026-07-18 at 4 11 44 AM" src="https://github.com/user-attachments/assets/f4e38ec9-c746-40ba-975c-eff24ebde62c" />
+<img width="933" height="621" alt="Screenshot 2026-07-18 at 4 11 37 AM" src="https://github.com/user-attachments/assets/2e3b779a-0cb5-4ff0-b77e-c1a0ea73139d" />
+<img width="1419" height="794" alt="Screenshot 2026-07-18 at 4 11 29 AM" src="https://github.com/user-attachments/assets/2a09e1dc-49f1-4cd0-b94c-6027ff416ff4" />
+<img width="1438" height="812" alt="Screenshot 2026-07-18 at 4 11 24 AM" src="https://github.com/user-attachments/assets/7a2533ad-91c8-4e39-bd00-f493997d31f7" />
+<img width="1440" height="815" alt="Screenshot 2026-07-18 at 4 11 13 AM" src="https://github.com/user-attachments/assets/15351eb6-2a22-472c-b319-564b45ca1087" />
 
 **Backend System**
 - **Node.js & Express.js**: Fast, unopinionated web framework driving the RESTful APIs.
