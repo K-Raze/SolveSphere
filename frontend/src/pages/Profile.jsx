@@ -21,11 +21,11 @@ export default function Profile() {
     <div className="relative min-h-screen">
       <div className="aurora-bg" />
 
-      <div className="relative z-10 pt-24 pb-16 px-6">
-        <div className="max-w-4xl mx-auto">
+      <div className="relative z-10 w-full" style={{ paddingTop: '120px', paddingBottom: '64px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div className="max-w-4xl w-full" style={{ margin: '0 auto' }}>
           {/* Profile Header */}
-          <div className="glass rounded-3xl p-8 md:p-12 mb-8 animate-fade-in-up">
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+          <div className="glass rounded-3xl animate-fade-in-up" style={{ padding: '48px', marginBottom: '32px' }}>
+            <div className="flex flex-col md:flex-row items-start md:items-center" style={{ gap: '24px' }}>
               {/* Avatar */}
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-green-accent to-green-deep flex items-center justify-center text-3xl font-black text-dark-950 shrink-0">
                 {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
@@ -48,7 +48,7 @@ export default function Profile() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3" style={{ gap: '20px', marginBottom: '32px' }}>
             <StatCard
               icon={<Trophy size={20} />}
               label="Reputation"
@@ -73,7 +73,7 @@ export default function Profile() {
           </div>
 
           {/* Activity placeholder */}
-          <div className="glass rounded-3xl p-8 animate-fade-in-up animate-delay-400">
+          <div className="glass rounded-3xl animate-fade-in-up animate-delay-400" style={{ padding: '32px' }}>
             <h2 className="text-lg font-semibold text-white mb-4">Recent Activity</h2>
             <div className="text-center py-12">
               <Code2 size={32} className="mx-auto text-white/10 mb-3" />
@@ -90,7 +90,7 @@ export default function Profile() {
 
 function StatCard({ icon, label, value, color, delay }) {
   return (
-    <div className={`glass rounded-2xl p-6 animate-fade-in-up ${delay}`}>
+    <div className={`glass rounded-2xl animate-fade-in-up ${delay}`} style={{ padding: '24px' }}>
       <div className={`${color} mb-3`}>{icon}</div>
       <p className="text-3xl font-bold text-white">{value}</p>
       <p className="text-sm text-white/40 mt-1">{label}</p>

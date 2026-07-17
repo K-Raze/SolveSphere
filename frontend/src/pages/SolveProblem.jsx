@@ -23,6 +23,7 @@ export default function SolveProblem() {
   const [lang, setLang] = useState(LANGUAGES[0]);
   const [langOpen, setLangOpen] = useState(false);
   const [running, setRunning] = useState(false);
+  const [started, setStarted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [hintLoading, setHintLoading] = useState(false);
   const [hint, setHint] = useState('');
@@ -43,6 +44,8 @@ export default function SolveProblem() {
           const draftRes = await draftAPI.get(id);
           if (draftRes.data?.data?.code) {
             setCode(draftRes.data.data.code);
+            const savedLang = LANGUAGES.find(l => l.name.toLowerCase() === draftRes.data.data.language?.toLowerCase());
+            if (savedLang) setLang(savedLang);
             return;
           }
         } catch {}
@@ -58,6 +61,7 @@ export default function SolveProblem() {
 
   // Timer
   useEffect(() => {
+    if (!started) return;
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 0) {
@@ -69,7 +73,7 @@ export default function SolveProblem() {
       });
     }, 1000);
     return () => clearInterval(timerRef.current);
-  }, []);
+  }, [started]);
 
   // Auto-save draft (debounced)
   const handleCodeChange = useCallback((value) => {
@@ -77,7 +81,7 @@ export default function SolveProblem() {
     clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(async () => {
       try {
-        await draftAPI.save(id, { code: value, languageId: lang.id });
+        await draftAPI.save(id, { code: value, language: lang.name.toLowerCase() });
       } catch {}
     }, 3000);
   }, [id, lang]);
@@ -92,12 +96,27 @@ export default function SolveProblem() {
     setRunning(true);
     setOutput(null);
     try {
-      const res = await submissionAPI.run({
-        problemId: id,
-        sourceCode: code,
-        languageId: lang.id,
+      const res = await submissionAPI.run(id, {
+        code,
+        language: lang.name.toLowerCase()
       });
-      setOutput(res.data);
+      
+      const backendData = res.data.data;
+      const formattedOutput = {
+        executionTime: backendData.runtime,
+        memory: backendData.memory,
+        results: backendData.rawResults?.map(r => ({
+          passed: r.status?.id === 3,
+          stdout: (r.stdout || '') + (r.compile_output ? '\\n' + r.compile_output : '') + (r.stderr ? '\\n' + r.stderr : '') || r.status?.description,
+          expected: r.expected_output // Judge0 might not return this unless requested, but we'll map it just in case
+        }))
+      };
+
+      if (backendData.errorMessage) {
+        formattedOutput.error = backendData.errorMessage;
+      }
+
+      setOutput(formattedOutput);
       setActiveTab('output');
     } catch (err) {
       const msg = err.response?.data?.message || 'Execution failed';
@@ -113,14 +132,28 @@ export default function SolveProblem() {
     setSubmitting(true);
     setOutput(null);
     try {
-      const res = await submissionAPI.submit({
-        problemId: id,
-        sourceCode: code,
-        languageId: lang.id,
+      const res = await submissionAPI.submit(id, {
+        code,
+        language: lang.name.toLowerCase()
       });
-      setOutput(res.data);
+      
+      const doc = res.data.data;
+      const formattedOutput = {
+        executionTime: doc.runtime,
+        memory: doc.memory,
+        results: [] // Hidden test cases don't return raw outputs
+      };
+      
+      if (doc.status !== 'accepted') {
+        formattedOutput.error = doc.errorMessage || `Failed at hidden test cases (${doc.testCasesPassed}/${doc.testCasesTotal} passed)`;
+      } else {
+        formattedOutput.stdout = `🎉 Successfully passed all ${doc.testCasesTotal} hidden test cases!`;
+      }
+
+      setOutput(formattedOutput);
       setActiveTab('output');
-      if (res.data.allTestsPassed) {
+      
+      if (doc.status === 'accepted') {
         toast.success('🎉 All test cases passed!');
       } else {
         toast.error('Some test cases failed.');
@@ -138,7 +171,7 @@ export default function SolveProblem() {
   const handleHint = async () => {
     setHintLoading(true);
     try {
-      const res = await aiAPI.getHint(id, code);
+      const res = await aiAPI.getHint(id, code, lang.name.toLowerCase());
       setHint(res.data.hint || res.data.data?.hint || 'Think about the data structures you can use.');
       setActiveTab('hint');
       toast.success('Hint generated!');
@@ -159,24 +192,45 @@ export default function SolveProblem() {
 
   if (!problem) return null;
 
+  if (!started) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-dark-950">
+        <div className="glass rounded-3xl text-center max-w-md w-full mx-4" style={{ padding: '48px' }}>
+          <div className="w-16 h-16 bg-green-accent/10 text-green-accent rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
+            <Clock size={32} />
+          </div>
+          <h2 className="text-2xl font-bold text-white" style={{ marginBottom: '8px' }}>{problem.title}</h2>
+          <p className="text-white/40" style={{ marginBottom: '32px' }}>You have 45 minutes to solve this problem. The timer will begin as soon as you start.</p>
+          <button 
+            onClick={() => setStarted(true)} 
+            className="btn-glow w-full text-base font-semibold"
+            style={{ padding: '14px 24px' }}
+          >
+            Start Interview
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const diffClass = `badge-${problem.difficulty}`;
 
   return (
-    <div className="h-screen flex flex-col bg-dark-950 pt-16">
+    <div className="h-screen flex flex-col bg-dark-950">
       {/* Toolbar */}
-      <div className="h-12 flex items-center justify-between px-4 border-b border-white/5 glass shrink-0">
-        <div className="flex items-center gap-3">
-          <h2 className="text-sm font-semibold text-white truncate max-w-[200px] md:max-w-none">
+      <div className="flex items-center justify-between border-b border-white/5 bg-dark-950 shrink-0 relative z-50" style={{ height: '60px', padding: '0 24px' }}>
+        <div className="flex items-center" style={{ gap: '16px' }}>
+          <h2 className="font-bold text-white truncate max-w-[200px] md:max-w-none" style={{ fontSize: '18px', letterSpacing: '0.2px' }}>
             {problem.title}
           </h2>
-          <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${diffClass}`}>
-            {problem.difficulty?.charAt(0).toUpperCase() + problem.difficulty?.slice(1)}
+          <span className={`rounded-full font-bold ${diffClass}`} style={{ padding: '4px 12px', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+            {problem.difficulty}
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center" style={{ gap: '20px' }}>
           {/* Timer */}
-          <div className={`flex items-center gap-1.5 text-sm font-mono ${timeLeft < 300 ? 'text-red-400' : 'text-white/50'}`}>
+          <div className={`flex items-center font-mono ${timeLeft < 300 ? 'text-red-400' : 'text-white/50'}`} style={{ gap: '6px', fontSize: '14px' }}>
             <Clock size={14} />
             {formatTime(timeLeft)}
           </div>
@@ -185,13 +239,14 @@ export default function SolveProblem() {
           <div className="relative">
             <button
               onClick={() => setLangOpen(!langOpen)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass-light text-xs text-white/70 hover:text-white"
+              className="flex items-center rounded-lg glass-light hover:text-white transition-colors"
+              style={{ padding: '6px 12px', gap: '8px', fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}
             >
               {lang.name}
               <ChevronDown size={14} />
             </button>
             {langOpen && (
-              <div className="absolute right-0 top-10 glass rounded-xl py-2 w-36 z-50 shadow-lg">
+              <div className="absolute right-0 top-10 glass rounded-xl shadow-2xl" style={{ zIndex: 9999, padding: '8px 0', width: '160px', backgroundColor: '#111814', border: '1px solid rgba(255,255,255,0.1)' }}>
                 {LANGUAGES.map((l) => (
                   <button
                     key={l.id}
@@ -200,9 +255,10 @@ export default function SolveProblem() {
                       if (!code || LANGUAGES.some(la => la.default === code)) setCode(l.default);
                       setLangOpen(false);
                     }}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-white/5 ${
-                      lang.id === l.id ? 'text-green-accent' : 'text-white/60'
+                    className={`w-full text-left transition-colors hover:bg-white/10 ${
+                      lang.id === l.id ? 'text-green-accent font-semibold' : 'text-white/70'
                     }`}
+                    style={{ padding: '10px 16px', fontSize: '14px', display: 'block' }}
                   >
                     {l.name}
                   </button>
@@ -213,12 +269,12 @@ export default function SolveProblem() {
         </div>
       </div>
 
-      {/* Main Layout */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+      {/* Main Content */}
+      <div className="flex-1 flex overflow-hidden" style={{ padding: '16px', gap: '16px', background: '#050706' }}>
         {/* Left Panel: Problem Description */}
-        <div className="w-full md:w-[420px] lg:w-[480px] border-r border-white/5 flex flex-col shrink-0 overflow-hidden">
+        <div className="w-full md:w-[420px] lg:w-[480px] bg-[#0a0f0d] rounded-xl border border-white/10 flex flex-col shrink-0 overflow-hidden shadow-2xl">
           {/* Tabs */}
-          <div className="flex border-b border-white/5 shrink-0">
+          <div className="flex border-b border-white/5 shrink-0 bg-[#162019]" style={{ gap: '4px', padding: '0 12px' }}>
             {[
               { key: 'description', label: 'Description' },
               { key: 'output', label: 'Output', icon: <Terminal size={13} /> },
@@ -227,11 +283,12 @@ export default function SolveProblem() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-1.5 px-4 py-3 text-xs font-medium transition-colors border-b-2 ${
+                className={`flex items-center transition-colors border-b-2 ${
                   activeTab === tab.key
                     ? 'text-green-accent border-green-accent'
                     : 'text-white/40 border-transparent hover:text-white/60'
                 }`}
+                style={{ padding: '12px 16px', gap: '6px', fontSize: '13px', fontWeight: 500 }}
               >
                 {tab.icon}
                 {tab.label}
@@ -240,33 +297,33 @@ export default function SolveProblem() {
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 overflow-y-auto p-5 text-sm">
+          <div className="flex-1 overflow-y-auto text-sm" style={{ padding: '28px' }}>
             {activeTab === 'description' && (
-              <div className="space-y-6">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
                 <div>
-                  <h3 className="text-lg font-bold text-white mb-3">{problem.title}</h3>
-                  <p className="text-white/60 leading-relaxed whitespace-pre-wrap">
+                  <h3 className="text-2xl font-bold text-white tracking-tight" style={{ marginBottom: '16px' }}>{problem.title}</h3>
+                  <p className="text-white/70 leading-relaxed whitespace-pre-wrap" style={{ fontSize: '15px' }}>
                     {problem.description}
                   </p>
                 </div>
 
                 {problem.visibleTestCases?.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-semibold text-white/80 mb-3">Examples</h4>
+                    <h4 className="text-sm font-semibold text-white/80" style={{ marginBottom: '16px' }}>Examples</h4>
                     {problem.visibleTestCases.map((tc, i) => (
-                      <div key={i} className="glass-light rounded-xl p-4 mb-3">
-                        <div className="mb-2">
-                          <span className="text-xs text-white/40">Input:</span>
-                          <pre className="text-green-accent font-mono text-xs mt-1">{tc.input}</pre>
+                      <div key={i} className="glass-light rounded-xl" style={{ padding: '16px 20px', marginBottom: '16px', background: 'rgba(255,255,255,0.03)' }}>
+                        <div style={{ marginBottom: '12px' }}>
+                          <span className="text-xs text-white/40 block font-semibold uppercase tracking-wider" style={{ marginBottom: '6px' }}>Input</span>
+                          <pre className="text-green-accent font-mono text-sm">{tc.input}</pre>
                         </div>
-                        <div className="mb-2">
-                          <span className="text-xs text-white/40">Output:</span>
-                          <pre className="text-white font-mono text-xs mt-1">{tc.output}</pre>
+                        <div style={{ marginBottom: tc.explanation ? '12px' : '0' }}>
+                          <span className="text-xs text-white/40 block font-semibold uppercase tracking-wider" style={{ marginBottom: '6px' }}>Output</span>
+                          <pre className="text-white font-mono text-sm">{tc.output}</pre>
                         </div>
                         {tc.explanation && (
                           <div>
-                            <span className="text-xs text-white/40">Explanation:</span>
-                            <p className="text-white/50 text-xs mt-1">{tc.explanation}</p>
+                            <span className="text-xs text-white/40 block font-semibold uppercase tracking-wider" style={{ marginBottom: '6px' }}>Explanation</span>
+                            <p className="text-white/60 text-sm leading-relaxed">{tc.explanation}</p>
                           </div>
                         )}
                       </div>
@@ -275,12 +332,15 @@ export default function SolveProblem() {
                 )}
 
                 {problem.tags?.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {problem.tags.map((tag) => (
-                      <span key={tag} className="px-2.5 py-1 rounded-lg glass-light text-xs text-white/40">
-                        {tag}
-                      </span>
-                    ))}
+                  <div>
+                    <h4 className="text-sm font-semibold text-white/80" style={{ marginBottom: '12px' }}>Tags</h4>
+                    <div className="flex flex-wrap" style={{ gap: '8px' }}>
+                      {problem.tags.map((tag) => (
+                        <span key={tag} className="rounded-lg glass-light text-xs text-white/60 font-medium" style={{ padding: '6px 12px', background: 'rgba(255,255,255,0.05)' }}>
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -289,15 +349,15 @@ export default function SolveProblem() {
             {activeTab === 'output' && (
               <div>
                 {output ? (
-                  <div className="space-y-3">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {output.error && (
-                      <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                      <div className="rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm" style={{ padding: '16px' }}>
                         {output.error}
                       </div>
                     )}
                     {output.results?.map((r, i) => (
-                      <div key={i} className="glass-light rounded-xl p-4">
-                        <div className="flex items-center gap-2 mb-2">
+                      <div key={i} className="glass-light rounded-xl" style={{ padding: '16px', background: 'rgba(255,255,255,0.03)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
                           {r.passed ? (
                             <CheckCircle2 size={16} className="text-green-accent" />
                           ) : (
@@ -308,28 +368,30 @@ export default function SolveProblem() {
                           </span>
                         </div>
                         {r.stdout && (
-                          <pre className="text-xs text-white/50 font-mono mt-1">stdout: {r.stdout}</pre>
+                          <pre className="text-xs text-white/50 font-mono" style={{ marginTop: '8px' }}>stdout: {r.stdout}</pre>
                         )}
                         {!r.passed && r.expected && (
-                          <pre className="text-xs text-white/40 font-mono mt-1">Expected: {r.expected}</pre>
+                          <pre className="text-xs text-white/40 font-mono" style={{ marginTop: '8px' }}>Expected: {r.expected}</pre>
                         )}
                       </div>
                     ))}
                     {output.stdout && !output.results && (
-                      <pre className="glass-light rounded-xl p-4 text-xs text-white/60 font-mono whitespace-pre-wrap">
+                      <pre className="glass-light rounded-xl text-xs text-white/60 font-mono whitespace-pre-wrap" style={{ padding: '16px' }}>
                         {output.stdout}
                       </pre>
                     )}
                     {output.executionTime && (
-                      <p className="text-xs text-white/30 mt-2">
+                      <p className="text-xs text-white/30" style={{ marginTop: '16px' }}>
                         Execution Time: {output.executionTime}s | Memory: {output.memory || 'N/A'} KB
                       </p>
                     )}
                   </div>
                 ) : (
-                  <p className="text-white/30 text-center py-12">
-                    Run or submit your code to see results here.
-                  </p>
+                  <div style={{ padding: '48px 0', textAlign: 'center' }}>
+                    <p className="text-white/30">
+                      Run or submit your code to see results here.
+                    </p>
+                  </div>
                 )}
               </div>
             )}
@@ -337,23 +399,24 @@ export default function SolveProblem() {
             {activeTab === 'hint' && (
               <div>
                 {hint ? (
-                  <div className="glass-light rounded-xl p-5">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Lightbulb size={16} className="text-yellow-400" />
-                      <span className="text-sm font-semibold text-white">AI Hint</span>
+                  <div className="glass-light rounded-xl" style={{ padding: '24px', background: 'rgba(255,255,255,0.03)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                      <Lightbulb size={20} className="text-yellow-400" />
+                      <span className="text-base font-semibold text-white">AI Hint</span>
                     </div>
-                    <p className="text-sm text-white/60 leading-relaxed whitespace-pre-wrap">{hint}</p>
+                    <p className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap">{hint}</p>
                   </div>
                 ) : (
-                  <div className="text-center py-12">
-                    <Lightbulb size={32} className="mx-auto text-white/10 mb-3" />
-                    <p className="text-white/30 text-sm mb-4">Stuck? Ask the AI for a contextual hint.</p>
+                  <div style={{ padding: '64px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                    <Lightbulb size={48} className="text-white/10" style={{ marginBottom: '24px' }} />
+                    <p className="text-white/40 text-base" style={{ marginBottom: '32px' }}>Stuck? Ask the AI for a contextual hint.</p>
                     <button
                       onClick={handleHint}
                       disabled={hintLoading}
-                      className="btn-glow px-6 py-2.5 text-sm inline-flex items-center gap-2"
+                      className="btn-glow inline-flex items-center font-semibold"
+                      style={{ padding: '12px 28px', gap: '8px' }}
                     >
-                      {hintLoading ? <Loader2 className="animate-spin" size={16} /> : <Lightbulb size={16} />}
+                      {hintLoading ? <Loader2 className="animate-spin" size={18} /> : <Lightbulb size={18} />}
                       Get Hint
                     </button>
                   </div>
@@ -364,56 +427,55 @@ export default function SolveProblem() {
         </div>
 
         {/* Right Panel: Code Editor */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1">
+        <div className="flex-1 flex flex-col relative bg-[#0a0f0d] rounded-xl border border-white/10 overflow-hidden shadow-2xl">
+          <div className="flex-1" style={{ minHeight: 0 }}>
             <Editor
               height="100%"
+              defaultLanguage="javascript"
               language={lang.monaco}
+              theme="vs-dark"
               value={code}
               onChange={handleCodeChange}
-              theme="vs-dark"
               options={{
-                fontSize: 14,
                 minimap: { enabled: false },
-                lineNumbers: 'on',
-                scrollBeyondLastLine: false,
-                wordWrap: 'on',
+                fontSize: 14,
+                lineHeight: 24,
                 padding: { top: 16 },
-                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-                fontLigatures: true,
+                scrollBeyondLastLine: false,
                 smoothScrolling: true,
-                cursorSmoothCaretAnimation: 'on',
-                bracketPairColorization: { enabled: true },
+                cursorBlinking: "smooth",
+                cursorSmoothCaretAnimation: "on",
+                formatOnPaste: true,
               }}
             />
           </div>
 
           {/* Bottom Action Bar */}
-          <div className="h-14 flex items-center justify-between px-4 border-t border-white/5 glass shrink-0">
+          <div className="border-t border-white/10 flex items-center justify-between shrink-0" style={{ height: '72px', padding: '0 24px', backgroundColor: '#0a0f0d' }}>
             <button
-              onClick={handleHint}
-              disabled={hintLoading}
-              className="flex items-center gap-1.5 text-xs text-white/40 hover:text-yellow-400 transition-colors"
+              onClick={() => setActiveTab('hint')}
+              className="text-white/40 hover:text-white/80 transition-colors flex items-center text-sm font-medium"
+              style={{ gap: '8px' }}
             >
-              {hintLoading ? <Loader2 className="animate-spin" size={14} /> : <Lightbulb size={14} />}
-              Hint
+              <Lightbulb size={16} /> Hint
             </button>
-
-            <div className="flex items-center gap-3">
+            <div className="flex" style={{ gap: '16px' }}>
               <button
                 onClick={handleRun}
                 disabled={running || submitting}
-                className="flex items-center gap-1.5 px-5 py-2 rounded-lg glass-light text-sm text-white/70 hover:text-white font-medium transition-all"
+                className="btn-glass text-sm flex items-center transition-all hover:bg-white/5"
+                style={{ padding: '10px 24px', gap: '8px', borderRadius: '8px' }}
               >
-                {running ? <Loader2 className="animate-spin" size={14} /> : <Play size={14} />}
+                {running ? <Loader2 className="animate-spin" size={16} /> : <Play size={16} />}
                 Run
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={running || submitting}
-                className="btn-glow flex items-center gap-1.5 px-6 py-2 text-sm"
+                className="btn-glow text-sm flex items-center font-bold"
+                style={{ padding: '10px 28px', gap: '8px', borderRadius: '8px' }}
               >
-                {submitting ? <Loader2 className="animate-spin" size={14} /> : <Send size={14} />}
+                {submitting ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />}
                 Submit
               </button>
             </div>

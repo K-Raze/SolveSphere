@@ -26,7 +26,9 @@ const register = async (req, res, next) => {
         
         res.status(201).json({
             success: true,
-            message: "User Registered Successfully"
+            message: "User Registered Successfully",
+            token,
+            user
         });
     } catch (err) {
         next(err);
@@ -57,7 +59,9 @@ const login = async (req, res, next) => {
         
         res.status(200).json({
             success: true,
-            message: "Logged In Successfully"
+            message: "Logged In Successfully",
+            token,
+            user
         });
     } catch (err) {
         next(err);
@@ -186,4 +190,16 @@ const getLeaderboard = async (req, res, next) => {
     }
 };
 
-module.exports = { register, login, logout, adminRegister, deleteProfile, getPublicProfile, getLeaderboard };
+const getProfile = async (req, res, next) => {
+    try {
+        const user = req.user;
+        res.status(200).json({
+            success: true,
+            data: user
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+module.exports = { register, login, logout, adminRegister, deleteProfile, getPublicProfile, getLeaderboard, getProfile };

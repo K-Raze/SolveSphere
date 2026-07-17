@@ -68,6 +68,11 @@ CRITICAL RULES:
             data: { hint: hint.trim() }
         });
     } catch (err) {
+        if (err.response && err.response.data && err.response.data.error) {
+            const apiError = new Error(err.response.data.error.message);
+            apiError.status = err.response.status;
+            return next(apiError);
+        }
         next(err);
     }
 };

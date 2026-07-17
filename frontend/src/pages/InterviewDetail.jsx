@@ -14,18 +14,18 @@ export default function InterviewDetail() {
   const [solving, setSolving] = useState(false);
 
   useEffect(() => {
-    const fetch = async () => {
+    const load = async () => {
       try {
         const res = await experienceAPI.getById(id);
         setExperience(res.data.data);
-      } catch (err) {
+      } catch {
         toast.error('Failed to load experience');
         navigate('/interviews');
       } finally {
         setLoading(false);
       }
     };
-    fetch();
+    load();
   }, [id, navigate]);
 
   const handleSolve = async () => {
@@ -35,11 +35,8 @@ export default function InterviewDetail() {
     }
 
     const problemId = experience.generatedProblemId?._id || experience.similarProblemId?._id;
-    if (problemId) {
-      return navigate(`/solve/${problemId}`);
-    }
+    if (problemId) return navigate(`/solve/${problemId}`);
 
-    // Trigger AI generation
     setSolving(true);
     try {
       const res = await experienceAPI.solve(id);
@@ -47,7 +44,7 @@ export default function InterviewDetail() {
         toast.success('Problem ready!');
         navigate(`/solve/${res.data.problemId}`);
       } else {
-        toast.success(res.data.message || 'Problem submitted for review');
+        toast.success(res.data.message || 'Submitted for review');
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to generate problem');
@@ -59,7 +56,7 @@ export default function InterviewDetail() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-green-accent" size={32} />
+        <div className="spinner-light spinner" style={{ width: 32, height: 32, borderWidth: 3 }} />
       </div>
     );
   }
@@ -74,94 +71,72 @@ export default function InterviewDetail() {
     <div className="relative min-h-screen">
       <div className="aurora-bg" />
 
-      <div className="relative z-10 pt-24 pb-16 px-6">
-        <div className="max-w-3xl mx-auto">
+      <div className="relative z-10 w-full flex flex-col items-center" style={{ paddingTop: '160px', paddingBottom: '80px', paddingLeft: '32px', paddingRight: '32px' }}>
+        <div className="w-full max-w-3xl">
           {/* Back */}
-          <Link to="/interviews" className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-green-accent transition-colors mb-8">
+          <Link to="/interviews" className="inline-flex items-center gap-2 text-sm text-white/30 hover:text-green-accent transition-colors duration-300" style={{ marginBottom: '40px' }}>
             <ArrowLeft size={16} />
             Back to Interviews
           </Link>
 
-          {/* Card */}
-          <div className="glass rounded-3xl p-8 md:p-12 animate-fade-in-up">
-            {/* Meta */}
-            <div className="flex flex-wrap items-center gap-3 mb-6">
-              <span className="flex items-center gap-2 text-green-accent font-semibold">
+          {/* Main Card */}
+          <div className="glass animate-fade-in-up" style={{ padding: '40px' }}>
+            {/* Meta Tags */}
+            <div className="flex flex-wrap items-center gap-4 mb-8">
+              <span className="flex items-center gap-2 text-green-accent font-bold text-[0.95rem]">
                 <Building2 size={18} />
                 {experience.company}
               </span>
-              <span className="text-white/20">•</span>
-              <span className="flex items-center gap-1.5 text-sm text-white/50">
+              <span className="w-1 h-1 rounded-full bg-white/15" />
+              <span className="flex items-center gap-1.5 text-sm text-white/40">
                 <Briefcase size={14} />
                 {experience.role}
               </span>
-              <span className="text-white/20">•</span>
-              <span className="flex items-center gap-1.5 text-sm text-white/50">
+              <span className="w-1 h-1 rounded-full bg-white/15" />
+              <span className="flex items-center gap-1.5 text-sm text-white/40">
                 <Calendar size={14} />
                 {experience.yearAsked}
               </span>
-              <span className="px-3 py-1 rounded-full glass-light text-xs text-white/50">
-                {experience.interviewRound}
-              </span>
+              <span className="chip">{experience.interviewRound}</span>
             </div>
 
             {/* Title */}
-            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight" style={{ marginBottom: '12px' }}>
               Interview at {experience.company}
             </h1>
-            <p className="text-sm text-white/30 mb-8">
+            <p className="text-sm text-white/25" style={{ marginBottom: '40px' }}>
               Shared by {experience.submittedBy?.username || 'Anonymous'}
             </p>
 
-            {/* Description */}
-            <div className="prose prose-invert max-w-none">
-              <p className="text-white/70 leading-relaxed text-base whitespace-pre-wrap">
+            {/* Story */}
+            <div className="bg-white/[0.02] rounded-2xl border border-white/5" style={{ padding: '32px', marginBottom: '40px' }}>
+              <p className="text-white/60 leading-[1.8] text-[1rem] whitespace-pre-wrap">
                 {experience.rawDescription}
               </p>
             </div>
 
             {/* Solve CTA */}
-            {hasProblem && (
-              <div className="mt-10 pt-8 border-t border-white/5">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm text-white/40 mb-1">Generated Problem</p>
-                    <p className="text-lg font-semibold text-white">{problemTitle}</p>
-                    {problemDifficulty && (
-                      <span className={`mt-1 inline-block px-3 py-0.5 rounded-full text-xs font-medium badge-${problemDifficulty}`}>
-                        {problemDifficulty.charAt(0).toUpperCase() + problemDifficulty.slice(1)}
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    onClick={handleSolve}
-                    disabled={solving}
-                    className="btn-glow px-8 py-3.5 text-base flex items-center gap-2 shrink-0"
-                  >
-                    {solving ? (
-                      <><Loader2 className="animate-spin" size={18} /> Generating...</>
-                    ) : (
-                      <>Solve This Problem <ArrowRight size={18} /></>
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {!hasProblem && (
-              <div className="mt-10 pt-8 border-t border-white/5">
-                <button
-                  onClick={handleSolve}
-                  disabled={solving}
-                  className="btn-glow px-8 py-3.5 text-base flex items-center gap-2"
-                >
-                  {solving ? (
-                    <><Loader2 className="animate-spin" size={18} /> Generating Problem...</>
-                  ) : (
-                    <>Generate & Solve <ArrowRight size={18} /></>
+            {hasProblem ? (
+              <div className="bg-green-accent/[0.04] border border-green-accent/15 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between" style={{ padding: '32px', gap: '24px' }}>
+                <div>
+                  <p className="text-xs text-white/30 uppercase tracking-wider font-semibold" style={{ marginBottom: '8px' }}>Generated Problem</p>
+                  <p className="text-xl font-bold text-white" style={{ marginBottom: '8px' }}>{problemTitle}</p>
+                  {problemDifficulty && (
+                    <span className={`badge badge-${problemDifficulty}`}>
+                      {problemDifficulty.charAt(0).toUpperCase() + problemDifficulty.slice(1)}
+                    </span>
                   )}
+                </div>
+                <button onClick={handleSolve} disabled={solving} className="btn-glow shrink-0 text-base">
+                  {solving ? <><Loader2 className="animate-spin" size={18} /> Generating...</> : <>Solve This Problem <ArrowRight size={18} /></>}
                 </button>
-                <p className="mt-3 text-xs text-white/30">
+              </div>
+            ) : (
+              <div className="text-center">
+                <button onClick={handleSolve} disabled={solving} className="btn-glow text-base">
+                  {solving ? <><Loader2 className="animate-spin" size={18} /> Generating Problem...</> : <>Generate & Solve <ArrowRight size={18} /></>}
+                </button>
+                <p className="mt-4 text-xs text-white/20">
                   AI will generate a structured coding problem from this experience.
                 </p>
               </div>

@@ -7,7 +7,8 @@ const LANGUAGE_MAP = {
     'cpp': 54,
     'java': 62,
     'javascript': 63,
-    'js': 63
+    'js': 63,
+    'python': 71
 };
 
 // Get Judge0 language ID from a language name

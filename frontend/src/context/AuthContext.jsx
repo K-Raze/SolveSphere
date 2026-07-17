@@ -5,10 +5,17 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem('solvesphere_user');
-    return stored ? JSON.parse(stored) : null;
+    try {
+      const stored = localStorage.getItem('solvesphere_user');
+      return stored && stored !== 'undefined' ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
   });
-  const [token, setToken] = useState(() => localStorage.getItem('solvesphere_token'));
+  const [token, setToken] = useState(() => {
+    const stored = localStorage.getItem('solvesphere_token');
+    return stored && stored !== 'undefined' ? stored : null;
+  });
   const [loading, setLoading] = useState(false);
 
   const isAuthenticated = !!token;

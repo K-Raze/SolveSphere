@@ -5,14 +5,20 @@ import { experienceAPI } from '../services/api';
 import { Send, Loader2, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const ROUNDS = ['Phone Screen', 'Onsite', 'OA', 'Technical', 'System Design', 'Behavioral', 'Final Round'];
+const ROUNDS = [
+  { label: 'Online Assessment', value: 'online-assessment' },
+  { label: 'Phone Screen', value: 'phone-screen' },
+  { label: 'Onsite', value: 'onsite' },
+  { label: 'Take Home', value: 'take-home' },
+  { label: 'Other', value: 'other' }
+];
 
 export default function SubmitExperience() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
-    company: '', role: '', interviewRound: 'Onsite', yearAsked: new Date().getFullYear(), rawDescription: ''
+    company: '', role: '', interviewRound: 'onsite', yearAsked: new Date().getFullYear(), rawDescription: ''
   });
 
   const update = (key) => (e) => setForm({ ...form, [key]: e.target.value });
@@ -40,55 +46,56 @@ export default function SubmitExperience() {
     <div className="relative min-h-screen">
       <div className="aurora-bg" />
 
-      <div className="relative z-10 pt-24 pb-16 px-6">
-        <div className="max-w-2xl mx-auto">
-          <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-green-accent transition-colors mb-8">
+      <div className="relative z-10 w-full" style={{ paddingTop: '120px', paddingBottom: '64px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div className="max-w-4xl w-full" style={{ margin: '0 auto' }}>
+          <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-green-accent transition-colors" style={{ marginBottom: '32px' }}>
             <ArrowLeft size={16} /> Back
           </button>
 
-          <div className="glass rounded-3xl p-8 md:p-12 animate-fade-in-up">
-            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Share Your Interview</h1>
-            <p className="text-white/40 text-sm mb-8">Describe what you were asked. AI will transform it into a coding problem.</p>
+          <div className="glass rounded-3xl animate-fade-in-up" style={{ padding: '48px' }}>
+            <h1 className="text-2xl md:text-3xl font-bold text-white" style={{ marginBottom: '8px' }}>Share Your Interview</h1>
+            <p className="text-white/40 text-sm" style={{ marginBottom: '32px' }}>Describe what you were asked. AI will transform it into a coding problem.</p>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div className="grid grid-cols-2" style={{ gap: '16px' }}>
                 <div>
-                  <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Company</label>
+                  <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider" style={{ marginBottom: '8px' }}>Company</label>
                   <input value={form.company} onChange={update('company')} placeholder="Google" className="input-underline" required />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Role</label>
+                  <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider" style={{ marginBottom: '8px' }}>Role</label>
                   <input value={form.role} onChange={update('role')} placeholder="Software Engineer" className="input-underline" required />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2" style={{ gap: '16px' }}>
                 <div>
-                  <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Round</label>
+                  <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider" style={{ marginBottom: '8px' }}>Round</label>
                   <select value={form.interviewRound} onChange={update('interviewRound')} className="input-underline bg-transparent cursor-pointer">
-                    {ROUNDS.map((r) => <option key={r} value={r} className="bg-dark-900 text-white">{r}</option>)}
+                    {ROUNDS.map((r) => <option key={r.value} value={r.value} className="bg-dark-900 text-white">{r.label}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Year</label>
+                  <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider" style={{ marginBottom: '8px' }}>Year</label>
                   <input type="number" value={form.yearAsked} onChange={update('yearAsked')} className="input-underline" required min="2015" max="2030" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Interview Description</label>
+                <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider" style={{ marginBottom: '8px' }}>Interview Description</label>
                 <textarea
                   value={form.rawDescription}
                   onChange={update('rawDescription')}
-                  rows={6}
+                  rows={8}
                   placeholder="Describe the coding problem you were asked in detail..."
                   className="input-underline resize-none !border-b-0 !border !border-white/10 rounded-xl !p-4"
+                  style={{ width: '100%', minHeight: '150px' }}
                   required
                   minLength={50}
                 />
               </div>
 
-              <button type="submit" disabled={loading} className="btn-glow w-full py-3.5 text-base flex items-center justify-center gap-2">
+              <button type="submit" disabled={loading} className="btn-glow w-full text-base flex items-center justify-center gap-2" style={{ padding: '14px 24px', marginTop: '16px' }}>
                 {loading ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
                 Submit Experience
               </button>

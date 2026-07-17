@@ -1,10 +1,13 @@
 <div align="center">
+  <img src="https://raw.githubusercontent.com/K-Raze/SolveSphere/main/frontend/public/vite.svg" width="80" alt="SolveSphere Logo" />
   <h1>🌐 SolveSphere</h1>
   <p><b>Read the interview. Solve the problem.</b></p>
   <p><i>An AI-Powered Interview Preparation Platform</i></p>
 </div>
 
 ---
+
+![SolveSphere Showcase](/Users/kartikdhamija/.gemini/antigravity-ide/brain/tempmediaStorage/media__1784328131730.png)
 
 ## 🌟 Vision
 
@@ -18,21 +21,22 @@ SolveSphere is not just another LeetCode clone. Every day, thousands of engineer
 
 - **🧠 AI-Powered Problem Generation**: Users submit raw interview experiences. Our Gemini AI pipeline automatically extracts constraints, edge cases, and requirements to generate structured coding problems.
 - **🛡️ Dynamic Confidence System**: We don't make false claims about "official" questions. Problems are rated via a transparent confidence metric (`Community Reported`, `Multiple Reports`, `Admin Reviewed`, `High Confidence`).
-- **🔍 Hybrid Duplicate Detection**: Prevents database bloat using MongoDB `$text` search combined with LLM semantic comparison. Duplicates are automatically merged to consolidate metadata.
 - **💡 Context-Aware AI Hints**: Get hints specifically tailored to *your* current code in the editor, simulating a real interviewer giving you a nudge in the right direction.
+- **🔍 Hybrid Duplicate Detection**: Prevents database bloat using MongoDB `$text` search combined with LLM semantic comparison. Duplicates are automatically merged to consolidate metadata.
 - **⏱️ 45-Minute Interview Mode**: Replicates the pressure of a real technical interview with a strict 45-minute timer to solve the problem.
 - **🏆 Gamification & Reputation**: Users earn a Reputation Score (+10 for solving a problem, +50 for contributing an approved interview experience) and compete on a Global Leaderboard.
 - **💾 Auto-Save (Drafts)**: Redis-backed real-time code saving prevents candidates from losing their hard work mid-interview.
 - **💬 Community Discussions**: A built-in threaded forum for every problem to discuss space/time complexities and alternative approaches.
-- **🚀 Sandboxed Code Execution**: Integrates with the **Judge0 API** to securely execute and evaluate untrusted user code against hidden test cases.
+- **🚀 Sandboxed Code Execution**: Integrates with the **Judge0 API** to securely execute and evaluate untrusted user code against hidden test cases, supporting C++, Java, Python, and JavaScript.
 
 ---
 
 ## 🛠️ Tech Stack
 
 **Frontend (React)**
-- **React.js**: (In Development) Building a highly dynamic, modern SPA for the coding environment.
-- **Tailwind CSS / Vanilla CSS**: For a stunning, modern dark-mode aesthetic.
+- **React.js & Vite**: Lightning-fast modern Single Page Application.
+- **Tailwind CSS / Vanilla CSS**: For a stunning, modern dark-mode glassmorphism aesthetic.
+- **Monaco Editor**: VS-Code powered rich text code editing experience in the browser.
 
 **Backend System**
 - **Node.js & Express.js**: Fast, unopinionated web framework driving the RESTful APIs.
@@ -68,12 +72,16 @@ The crown jewel of SolveSphere is its automated data pipeline:
 1. **Clone the repository**
    ```bash
    git clone https://github.com/K-Raze/SolveSphere.git
-   cd SolveSphere/backend
+   cd SolveSphere
    ```
 
 2. **Install dependencies**
    ```bash
-   npm install
+   # Install backend dependencies
+   cd backend && npm install
+   
+   # Install frontend dependencies
+   cd ../frontend && npm install
    ```
 
 3. **Configure Environment Variables**
@@ -89,14 +97,18 @@ The crown jewel of SolveSphere is its automated data pipeline:
    ```
 
 4. **Seed the Database**
-   Run the seeding script to populate the database with an initial batch of 50 AI-generated algorithmic interview problems:
+   Run the seeding script to populate the database with an initial batch of AI-generated algorithmic interview problems:
    ```bash
-   node seed.js
+   cd backend && node seed.js
    ```
 
-5. **Start the Server**
+5. **Start the Servers**
    ```bash
-   npm start
+   # Start the backend server (Terminal 1)
+   cd backend && npm start
+   
+   # Start the frontend dev server (Terminal 2)
+   cd frontend && npm run dev
    ```
 
 ---

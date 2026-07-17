@@ -18,7 +18,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !error.config.url.includes('/user/login')) {
       localStorage.removeItem('solvesphere_token');
       localStorage.removeItem('solvesphere_user');
       window.location.href = '/login';
@@ -52,8 +52,8 @@ export const problemAPI = {
 
 // ===== SUBMISSIONS =====
 export const submissionAPI = {
-  run: (data) => api.post('/submit/run', data),
-  submit: (data) => api.post('/submit/submit', data),
+  run: (problemId, data) => api.post(`/submission/run/${problemId}`, data),
+  submit: (problemId, data) => api.post(`/submission/submit/${problemId}`, data),
 };
 
 // ===== DISCUSSIONS =====
@@ -64,13 +64,13 @@ export const discussionAPI = {
 
 // ===== AI =====
 export const aiAPI = {
-  getHint: (problemId, userCode) => api.post('/ai/hint', { problemId, userCode }),
+  getHint: (problemId, code, language) => api.post('/ai/hint', { problemId, code, language }),
 };
 
 // ===== DRAFTS =====
 export const draftAPI = {
-  get: (problemId) => api.get(`/submit/draft/${problemId}`),
-  save: (problemId, data) => api.put(`/submit/draft/${problemId}`, data),
+  get: (problemId) => api.get(`/submission/draft/${problemId}`),
+  save: (problemId, data) => api.post(`/submission/draft/${problemId}`, data),
 };
 
 export default api;

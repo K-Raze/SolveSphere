@@ -1,105 +1,91 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LogOut, User, Zap, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuth();
-  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
-
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5">
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-accent to-green-deep flex items-center justify-center">
-            <Zap size={18} className="text-dark-950" />
-          </div>
-          <span className="text-xl font-bold text-white tracking-tight group-hover:text-green-accent transition-colors">
-            SolveSphere
-          </span>
-        </Link>
-
-        {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-8">
-          <Link to="/interviews" className="text-sm text-white/60 hover:text-green-accent transition-colors font-medium">
-            Interviews
+    <>
+      {/* Floating Pill Navbar */}
+      <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 md:px-8 pointer-events-none">
+        <nav className="pointer-events-auto w-full max-w-5xl h-16 glass bg-dark-950/60 backdrop-blur-2xl border border-white/10 rounded-full flex items-center justify-between shadow-2xl shadow-black/50 relative" style={{ padding: '0 32px' }}>
+          
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-accent to-green-deep flex items-center justify-center shadow-lg shadow-green-accent/20">
+              <Zap size={16} className="text-dark-950" />
+            </div>
+            <span className="text-lg font-black text-white tracking-tight group-hover:text-green-accent transition-colors duration-300">
+              SolveSphere
+            </span>
           </Link>
-          {isAuthenticated && (
-            <Link to="/submit-experience" className="text-sm text-white/60 hover:text-green-accent transition-colors font-medium">
-              Share Experience
+
+          {/* Desktop Nav - Center */}
+          <div className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
+            <Link to="/interviews" className="text-lg font-black text-white tracking-tight hover:text-green-accent transition-colors duration-300">
+              Interviews
             </Link>
-          )}
-        </div>
+            {isAuthenticated && (
+              <Link to="/submit-experience" className="text-lg font-black text-white tracking-tight hover:text-green-accent transition-colors duration-300">
+                Share Experience
+              </Link>
+            )}
+          </div>
 
-        {/* Right Side */}
-        <div className="hidden md:flex items-center gap-4">
-          {isAuthenticated ? (
-            <>
-              <Link
-                to="/profile"
-                className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors"
-              >
-                <User size={16} />
-                <span>{user?.username || 'Profile'}</span>
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 text-sm text-white/40 hover:text-red-400 transition-colors"
-              >
-                <LogOut size={16} />
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="text-sm text-white/60 hover:text-white transition-colors font-medium">
-                Sign In
-              </Link>
-              <Link
-                to="/register"
-                className="btn-glow px-5 py-2 text-sm"
-              >
-                Get Started
-              </Link>
-            </>
-          )}
-        </div>
+          {/* Right */}
+          <div className="hidden md:flex items-center" style={{ gap: '24px' }}>
+            {isAuthenticated ? (
+              <>
+                <Link to="/profile" className="flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-white/5 transition-colors duration-300">
+                  <div className="w-6 h-6 rounded-full bg-green-accent/10 flex items-center justify-center">
+                    <User size={12} className="text-green-accent" />
+                  </div>
+                  <span className="text-[0.85rem] font-medium text-white/80">{user?.username || 'Profile'}</span>
+                </Link>
+                <button onClick={logout} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-500/10 text-white/40 hover:text-red-400 transition-colors duration-300">
+                  <LogOut size={14} />
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="text-[0.9rem] text-white/60 hover:text-white transition-colors duration-300 font-medium">
+                  Sign In
+                </Link>
+                <Link to="/register" className="bg-green-accent hover:bg-green-400 text-dark-950 text-[0.9rem] font-bold rounded-full transition-all duration-300 hover:shadow-[0_0_20px_rgba(34,197,94,0.4)]" style={{ padding: '10px 28px' }}>
+                  Get Started
+                </Link>
+              </>
+            )}
+          </div>
 
-        {/* Mobile Toggle */}
-        <button className="md:hidden text-white/70" onClick={() => setMobileOpen(!mobileOpen)}>
-          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+          {/* Mobile Toggle */}
+          <button className="md:hidden text-white/60 p-2" onClick={() => setMobileOpen(!mobileOpen)}>
+            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </nav>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu Overlay */}
       {mobileOpen && (
-        <div className="md:hidden glass border-t border-white/5 px-6 py-4 space-y-3">
-          <Link to="/interviews" onClick={() => setMobileOpen(false)} className="block text-sm text-white/70 hover:text-green-accent">
-            Interviews
-          </Link>
+        <div className="fixed inset-0 z-40 bg-dark-950/95 backdrop-blur-xl flex flex-col items-center justify-center gap-8">
+          <Link to="/interviews" onClick={() => setMobileOpen(false)} className="text-2xl font-bold text-white hover:text-green-accent transition-colors">Interviews</Link>
           {isAuthenticated ? (
             <>
-              <Link to="/profile" onClick={() => setMobileOpen(false)} className="block text-sm text-white/70 hover:text-green-accent">
-                Profile
-              </Link>
-              <button onClick={() => { handleLogout(); setMobileOpen(false); }} className="block text-sm text-red-400">
-                Logout
-              </button>
+              <Link to="/submit-experience" onClick={() => setMobileOpen(false)} className="text-2xl font-bold text-white hover:text-green-accent transition-colors">Share Experience</Link>
+              <Link to="/profile" onClick={() => setMobileOpen(false)} className="text-2xl font-bold text-white hover:text-green-accent transition-colors">Profile</Link>
+              <button onClick={() => { logout(); setMobileOpen(false); }} className="text-2xl font-bold text-red-400">Logout</button>
             </>
           ) : (
             <>
-              <Link to="/login" onClick={() => setMobileOpen(false)} className="block text-sm text-white/70">Sign In</Link>
-              <Link to="/register" onClick={() => setMobileOpen(false)} className="block text-sm text-green-accent font-semibold">Get Started</Link>
+              <Link to="/login" onClick={() => setMobileOpen(false)} className="text-2xl font-bold text-white hover:text-green-accent transition-colors">Sign In</Link>
+              <Link to="/register" onClick={() => setMobileOpen(false)} className="text-2xl font-bold text-green-accent">Get Started</Link>
             </>
           )}
         </div>
       )}
-    </nav>
+    </>
   );
 }

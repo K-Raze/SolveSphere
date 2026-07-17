@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
@@ -17,11 +17,13 @@ function ProtectedRoute({ children }) {
 }
 
 function AppRoutes() {
+  const { isAuthenticated } = useAuth();
+  
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      <Route path="/" element={isAuthenticated ? <Navigate to="/interviews" /> : <Home />} />
+      <Route path="/login" element={isAuthenticated ? <Navigate to="/interviews" /> : <Login />} />
+      <Route path="/register" element={isAuthenticated ? <Navigate to="/interviews" /> : <Register />} />
       <Route path="/interviews" element={<InterviewFeed />} />
       <Route path="/interviews/:id" element={<InterviewDetail />} />
       <Route path="/solve/:id" element={<ProtectedRoute><SolveProblem /></ProtectedRoute>} />
@@ -31,12 +33,23 @@ function AppRoutes() {
   );
 }
 
+function AppLayout() {
+  const location = useLocation();
+  const hideNavbar = location.pathname.startsWith('/solve/');
+
+  return (
+    <>
+      {!hideNavbar && <Navbar />}
+      <AppRoutes />
+    </>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Navbar />
-        <AppRoutes />
+        <AppLayout />
         <Toaster
           position="bottom-right"
           toastOptions={{
